@@ -1,7 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{associated_token::AssociatedToken, token_interface::{Mint, TokenAccount, TokenInterface}};
-use crate::state::Escrow;
-
+use anchor_spl::{
+    associated_token::AssociatedToken, 
+    token_interface::transfer_checked, 
+    token_interface::
+    {Mint, TokenAccount, TokenInterface, TransferChecked}
+};
+use crate::{constants::ESCROW_SEED, state::Escrow};
 
 #[derive(Accounts)]
 #[instruction(seeds: u64)]
@@ -31,11 +35,10 @@ pub struct Make<'info> {
         init,
         payer = maker,
         space = Escrow::DISCRIMINATOR.len() + Escrow::INIT_SPACE,
-        seeds = [b"escrow", maker.key().as_ref(), seeds.to_le_bytes().as_ref()],
+        seeds = [ESCROW_SEED, maker.key().as_ref(), seeds.to_le_bytes().as_ref()],
         bump,
     )]
     pub escrow: Account<'info, Escrow>,
-
 
     #[account(
         init,
@@ -49,4 +52,37 @@ pub struct Make<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Interface<'info, TokenInterface>,
     pub system_program: Program<'info, System>,
+}
+
+impl <'info> Make<'info> {
+    // Initialize the Escrow
+    pub fn init_escrow(&mut self, seed: u64, receive: u64, bumps: &MakeBumps) -> Result<()> {
+        self.escrow.set_inner(Escrow { 
+            maker: self.maker.key(), 
+            seed: seed, 
+            mint_a: self.mint_a.key(), 
+            mint_b: self.mint_b.key(), 
+            receive: receive, 
+            bump: bumps.escrow,
+        });
+
+        Ok(())
+    }
+
+    // Deposit tokens from the maker to the Escrow Vault
+    pub fn deposit(&mut self, deposit: u64) -> Result<()> {
+        
+        let transfer_accounts = TransferChecked {
+            from: self.maker_ata_a.to_account_info(),
+            mint: self.mint_a.to_account_info(),
+            to: self.vault.to_account_info(),
+            authority: self.maker.to_account_info(),
+        };
+
+        let cpi_program_id = self.token_program.key();
+
+        let cpi_context = CpiContext::new(cpi_program_id, transfer_accounts);
+
+        transfer_checked(cpi_context, deposit, self.mint_a.decimals)
+    }
 }
