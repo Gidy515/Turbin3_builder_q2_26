@@ -71,6 +71,24 @@ describe("vault", () => {
     expect(vaultState.stateBump).to.equal(stateBump);
   });
 
+  it("Fails when initializing the vault twice", async () => {
+    try {
+      await program.methods
+        .initialize()
+        .accountsStrict({
+          user,
+          vaultState: vaultStatePda,
+          vault: vaultPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      assert.fail("Second initialization should fail");
+    } catch (err) {
+      console.log("Expected double init failure:", err);
+    }
+  });
+
   it("Deposit 1 SOL into the vault", async () => {
     const depositAmount = 1 * LAMPORTS_PER_SOL;
 
@@ -99,6 +117,42 @@ describe("vault", () => {
     expect(finalBalanceUser).to.be.lessThan(initialUserBalance - depositAmount);
   });
 
+  it("Fails when another user tries to withdraw", async () => {
+    const attacker = anchor.web3.Keypair.generate();
+
+    const sig = await provider.connection.requestAirdrop(
+      attacker.publicKey,
+      2 * LAMPORTS_PER_SOL
+    );
+
+    await confirmTx(sig);
+
+    const attackerProvider = new anchor.AnchorProvider(
+      provider.connection,
+      new NodeWallet(attacker),
+      provider.opts
+    );
+
+    const attackerProgram = new Program<Vault>(program.idl, attackerProvider);
+
+    try {
+      await attackerProgram.methods
+        .withdraw(new BN(0.1 * LAMPORTS_PER_SOL))
+        .accountsStrict({
+          user: attacker.publicKey,
+          vaultState: vaultStatePda,
+          vault: vaultPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([attacker])
+        .rpc();
+
+      assert.fail("Unauthorized withdrawal should fail");
+    } catch (err) {
+      console.log("Expected unauthorized failure:", err);
+    }
+  });
+
   it("Withdraw 0.5 SOL from the vault", async () => {
     const withdrawAmount = 0.5 * LAMPORTS_PER_SOL;
 
@@ -120,14 +174,34 @@ describe("vault", () => {
     const finalBalanceVault = await provider.connection.getBalance(vaultPda);
     const finalBalanceUser = await provider.connection.getBalance(user);
 
+    expect(finalBalanceVault).to.equal(initialVaultBalance - withdrawAmount);
+    expect(finalBalanceUser).to.be.greaterThan(initialUserBalance);
+
     console.log(
       "Initial Vault Balance before withdrawal:",
       initialVaultBalance
     );
     console.log("Final Vault Balance after withdrawal:", finalBalanceVault);
+  });
 
-    expect(finalBalanceVault).to.equal(initialVaultBalance - withdrawAmount);
-    expect(finalBalanceUser).to.be.greaterThan(initialUserBalance);
+  it("Fails when withdrawing more than vault balance", async () => {
+    const excessiveAmount = new BN(100 * LAMPORTS_PER_SOL);
+
+    try {
+      await program.methods
+        .withdraw(excessiveAmount)
+        .accountsStrict({
+          user,
+          vaultState: vaultStatePda,
+          vault: vaultPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      assert.fail("Transaction should have failed");
+    } catch (err) {
+      console.log("Expected failure:", err);
+    }
   });
 
   it("Close the vault and transfer all funds to the user", async () => {
@@ -155,5 +229,29 @@ describe("vault", () => {
     const finalBalanceUser = await provider.connection.getBalance(user);
 
     expect(finalBalanceUser).to.be.greaterThan(initialUserBalance);
+
+    console.log(
+      "Initial User Balance before closing vault:",
+      initialUserBalance
+    );
+    console.log("Final User Balance after closing vault:", finalBalanceUser);
+  });
+
+  it("Fails to deposit after vault is closed", async () => {
+    try {
+      await program.methods
+        .deposit(new BN(0.1 * LAMPORTS_PER_SOL))
+        .accountsStrict({
+          user,
+          vaultState: vaultStatePda,
+          vault: vaultPda,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+
+      assert.fail("Deposit after close should fail");
+    } catch (err) {
+      console.log("Expected failure after close:", err);
+    }
   });
 });
