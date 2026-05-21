@@ -7,15 +7,17 @@ pub struct Close <'info>{
     pub user: Signer<'info>,
 
     #[account(
+        mut,
         seeds = [b"state", user.key().as_ref()],
-        bump = vault_state.vault_bump,
+        bump = vault_state.state_bump,
+        close = user,
     )]
     pub vault_state: Account<'info, VaultState>,
 
     #[account(
         mut,
         seeds = [b"vault", vault_state.key().as_ref()],
-        bump = vault_state.state_bump,
+        bump = vault_state.vault_bump,
     )]
     pub vault: SystemAccount<'info>,
 
