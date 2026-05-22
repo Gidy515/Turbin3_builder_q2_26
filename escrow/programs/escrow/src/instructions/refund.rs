@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::AssociatedToken, token::{CloseAccount, close_account}, token_interface::{Mint, TokenAccount, TokenInterface, TransferChecked, transfer_checked}
+    token::{CloseAccount, close_account}, token_interface::{Mint, TokenAccount, TokenInterface, TransferChecked, transfer_checked}
 };
 use crate::{constants::ESCROW_SEED, state::Escrow};
 
