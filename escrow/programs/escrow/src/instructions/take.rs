@@ -16,12 +16,12 @@ pub struct Take<'info> {
     #[account(
         mint::token_program = token_program
     )]
-    pub mint_a: InterfaceAccount<'info, Mint>,
+    pub mint_a: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(
         mint::token_program = token_program
     )]
-    pub mint_b: InterfaceAccount<'info, Mint>,
+    pub mint_b: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(
         init_if_needed,
@@ -30,7 +30,7 @@ pub struct Take<'info> {
         associated_token::authority = taker,
         associated_token::token_program = token_program,
     )]
-    pub taker_ata_a: InterfaceAccount<'info, TokenAccount>,
+    pub taker_ata_a: Box<InterfaceAccount<'info, TokenAccount>>,
 
     #[account(
         init_if_needed,
@@ -97,7 +97,7 @@ impl <'info> Take<'info> {
             mint: self.mint_a.to_account_info(),
         };
 
-        let signer_seeds: [&[&[u8]]; 1] = [&[
+        let signer_seeds: [&[&[u8]]; 1] = [&[ 
             ESCROW_SEED,
             self.escrow.maker.as_ref(),
             &self.escrow.seed.to_le_bytes()[..],
