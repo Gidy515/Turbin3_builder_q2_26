@@ -8,7 +8,19 @@ use {
     solana_transaction::versioned::VersionedTransaction,
 };
 
-/*#[test]
+// Setup function to initialize the LiteSVM and load the escrow program with payer keypair
+fn setup() -> (LiteSVM, Keypair) {
+    let program_id = escrow::id();
+    let payer = Keypair::new();
+    let mut svm = LiteSVM::new(); // this is the svm simulator instance, it simulates the Solana runtime environment for testing purposes
+    let bytes = include_bytes!("../../../target/deploy/escrow.so"); // this is the compiled program's bytecode, which is loaded into the svm for execution
+    svm.add_program(program_id, bytes).unwrap(); // this registers the program with the svm, allowing us to call its instructions in our tests
+    svm.airdrop(&payer.pubkey(), 10_000_000_000).unwrap();
+
+    (svm, payer)
+}
+
+#[test]
 fn test_initialize() {
     let program_id = escrow::id();
     let payer = Keypair::new();
@@ -30,4 +42,3 @@ fn test_initialize() {
     let res = svm.send_transaction(tx);
     assert!(res.is_ok());
 }
-*/
