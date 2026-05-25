@@ -537,3 +537,9 @@ DeFi protocols manage real capital and require rigorous security practices.
 ```
 
 ```
+
+## All Tests Passing Image
+
+<p align="center">
+  <img src="./assets/ammtests.png" alt="All tests passing" width="900"/>
+</p>
