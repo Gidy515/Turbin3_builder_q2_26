@@ -1,6 +1,12 @@
 
-use {
-    anchor_lang::{InstructionData, ToAccountMetas}, anchor_spl::associated_token, litesvm::LiteSVM, litesvm_token::CreateMint, solana_keypair::Keypair, solana_message::{Instruction, Message, VersionedMessage}, solana_pubkey::Pubkey, solana_signer::Signer, solana_transaction::versioned::VersionedTransaction
+use { 
+    anchor_spl::associated_token, litesvm::LiteSVM, 
+    litesvm_token::CreateMint, 
+    solana_keypair::Keypair, 
+    solana_message::{Instruction, Message, VersionedMessage}, 
+    solana_pubkey::Pubkey, 
+    solana_signer::Signer, 
+    solana_transaction::versioned::VersionedTransaction,
 };
 
 mod ix_handlers;
@@ -92,5 +98,47 @@ fn test_deposit() {
     let deposit_ix = create_deposit_ix(&mut svm, &payer, mint_x, mint_y, mint_lp, config, vault_x, vault_y);
 
     let res = send(&mut svm, &[init_ix, deposit_ix], &payer, &[&payer]);
+    assert!(res.is_ok());
+}
+
+#[test]
+fn test_withdraw() {
+    let (mut svm, payer, mint_x, mint_y, config, mint_lp, vault_x, vault_y) = setup();
+
+    let init_ix = create_initialize_ix(
+        &mut svm, &payer, mint_x, mint_y, config, mint_lp, vault_x, vault_y,
+    );
+    
+    let deposit_ix = create_deposit_ix(
+        &mut svm, &payer, mint_x, mint_y, mint_lp, config, vault_x, vault_y
+    );
+
+    let withdraw_ix = create_withdraw_ix(
+        &mut svm, &payer, mint_x, mint_y, mint_lp, config, vault_x, vault_y
+    );
+
+    let res = send(
+        &mut svm, &[init_ix, deposit_ix, withdraw_ix], &payer, &[&payer]
+    );
+    assert!(res.is_ok());
+}
+
+#[test]
+fn test_swap() {
+    let (mut svm, payer, mint_x, mint_y, config, mint_lp, vault_x, vault_y) = setup();
+
+    let init_ix = create_initialize_ix(
+        &mut svm, &payer, mint_x, mint_y, config, mint_lp, vault_x, vault_y,
+    );
+    
+    let deposit_ix = create_deposit_ix(
+        &mut svm, &payer, mint_x, mint_y, mint_lp, config, vault_x, vault_y
+    );
+
+    let swap_ix = create_swap_ix(
+        &mut svm, &payer, mint_x, mint_y, mint_lp, config, vault_x, vault_y
+    );
+
+    let res = send(&mut svm, &[init_ix, deposit_ix, swap_ix], &payer, &[&payer]);
     assert!(res.is_ok());
 }
