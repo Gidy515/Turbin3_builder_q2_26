@@ -202,3 +202,11 @@ cargo test -p escrow -- --nocapture
 ## Deployment
 
 Run `anchor deploy` to deploy to whatever cluster is configured in `Anchor.toml`. For devnet, set `cluster = "devnet"` in `Anchor.toml` or pass `--provider.cluster devnet`. Ensure your wallet has enough SOL to cover the program account rent (determined by the size of the `.so` file) plus transaction fees. After a successful deploy, the program is live at the address declared in `declare_id!`.
+
+# Test Results
+
+## ✅ All Tests Passing
+
+<p align="center">
+  <img src="./assets/Screenshot from 2026-05-22 19-11-28.png" alt="Escrow tests passing" width="1000"/>
+</p>
