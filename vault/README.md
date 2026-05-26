@@ -52,5 +52,6 @@ Drains all remaining SOL from the vault back to the user and permanently closes 
 
 <p align="center">
   <img src="./assets/Screenshot from 2026-05-26 11-31-49.png" alt="Vault tests passing 1" width="1000"/>
-   <img src="./assets/Screenshot from 2026-05-26 11-32-00.png" alt="Vault tests passing 1" width="1000"/>
+  <img src="./assets/Screenshot from 2026-05-26 11-32-00.png" alt="Vault tests passing 2" width="1000"/>
+  <img src="./assets/litesvm.png" alt="Vault tests passing litesvm" width="1000"/>
 </p>

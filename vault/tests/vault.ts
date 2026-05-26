@@ -597,3 +597,5 @@ describe("vault", () => {
     }
   });
 });
+
+// , check-cfg = ['cfg(target_os, values("solana"))']
